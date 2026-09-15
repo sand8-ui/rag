@@ -71,9 +71,6 @@ export function LoginPage() {
         <Typography.Title level={3} className="!mb-1">
           欢迎来到 StayWise
         </Typography.Title>
-        <Typography.Paragraph type="secondary">
-          使用邮箱登录或注册。登录后会签发短期 access token 与长期 refresh token。
-        </Typography.Paragraph>
         <Tabs
           items={[
             {

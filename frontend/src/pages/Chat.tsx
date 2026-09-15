@@ -2,6 +2,7 @@ import { SendOutlined } from '@ant-design/icons';
 import { Button, Card, Input } from 'antd';
 import { useRef, useState } from 'react';
 import { API_BASE_URL } from '../api/client';
+import { getAccessToken } from '../auth/tokens';
 
 type ChatMessage = {
   id: string;
@@ -41,8 +42,11 @@ export function ChatPage() {
     setInput('');
     setStreaming(true);
 
+    const token = getAccessToken();
     const source = new EventSource(
-      `${API_BASE_URL}/chat/stream?q=${encodeURIComponent(question)}`,
+      `${API_BASE_URL}/chat/stream?q=${encodeURIComponent(question)}${
+        token ? `&access_token=${encodeURIComponent(token)}` : ''
+      }`,
     );
     sourceRef.current = source;
 

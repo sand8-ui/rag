@@ -33,11 +33,11 @@ export class OrdersService {
     },
   ];
 
-  findAll() {
-    return this.orders;
+  findAll(userId: string) {
+    return this.orders.filter((order) => order.userId === userId);
   }
 
-  create(dto: CreateOrderDto) {
+  create(userId: string, dto: CreateOrderDto) {
     const hotel = MOCK_HOTELS.find((item) =>
       item.rooms.some((room) => room.id === dto.roomId),
     );
@@ -45,7 +45,7 @@ export class OrdersService {
 
     const order: Order = {
       id: `order-${this.orders.length + 1}`,
-      userId: 'user-1',
+      userId,
       hotelId: hotel?.id ?? 'hotel-unknown',
       hotelName: hotel?.name ?? '未知酒店',
       roomId: dto.roomId,
@@ -59,11 +59,8 @@ export class OrdersService {
     return order;
   }
 
-  update(id: string, dto: UpdateOrderDto) {
-    const order = this.orders.find((item) => item.id === id);
-    if (!order) {
-      throw new NotFoundException(`订单 ${id} 不存在`);
-    }
+  update(userId: string, id: string, dto: UpdateOrderDto) {
+    const order = this.findOwned(userId, id);
 
     if (dto.checkIn) {
       order.checkIn = dto.checkIn;
@@ -74,12 +71,19 @@ export class OrdersService {
     return order;
   }
 
-  remove(id: string) {
-    const order = this.orders.find((item) => item.id === id);
+  remove(userId: string, id: string) {
+    const order = this.findOwned(userId, id);
+    order.status = 'CANCELLED';
+    return order;
+  }
+
+  private findOwned(userId: string, id: string) {
+    const order = this.orders.find(
+      (item) => item.id === id && item.userId === userId,
+    );
     if (!order) {
       throw new NotFoundException(`订单 ${id} 不存在`);
     }
-    order.status = 'CANCELLED';
     return order;
   }
 }

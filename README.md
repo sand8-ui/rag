@@ -4,23 +4,27 @@ NestJS + React（Vite）单体仓库骨架。当前是框架阶段：页面可�
 
 ## 技术栈
 
-- 后端：NestJS、Prisma、SQLite、JWT 占位
+- 后端：NestJS、Prisma、PostgreSQL、JWT 双 token
 - 前端：React、Vite、TailwindCSS、Ant Design、React Router
 - AI 客服：SSE 流式占位，后续接 RAG 检索
 
 ## 本地启动
 
-需要 Node.js 18+。
+需要 Node.js 18+ 和 Docker。
 
 ```bash
+# 启动 PostgreSQL
+docker compose up -d
+
 # 安装依赖
 npm install
 npm install --prefix backend
 npm install --prefix frontend
 
-# 生成 Prisma Client 并创建本地 SQLite 表
+# 生成 Prisma Client、建表并写入演示账号
 npm run prisma:generate
 npm run prisma:push
+npm run prisma:seed
 
 # 同时启动前后端
 npm run dev
@@ -33,7 +37,7 @@ npm run dev:api   # http://localhost:3001
 npm run dev:web   # http://localhost:5173
 ```
 
-演示账号可直接用登录页默认值：`guest@staywise.com` / `123456`。
+演示账号：`guest@staywise.com` / `123456`。
 
 ## 目录
 
@@ -55,7 +59,7 @@ frontend/    Vite React 应用
 
 ## 主要接口
 
-- `POST /auth/login`、`POST /auth/register`
-- `GET /hotels`、`GET /hotels/:id`
-- `GET /orders`、`POST /orders`、`PATCH /orders/:id`、`DELETE /orders/:id`
-- `GET /chat/stream`（SSE）
+- `POST /auth/login`、`POST /auth/register`、`POST /auth/refresh`、`POST /auth/logout`
+- `GET /hotels`、`GET /hotels/:id`（需 JWT）
+- `GET /orders`、`POST /orders`、`PATCH /orders/:id`、`DELETE /orders/:id`（需 JWT）
+- `GET /chat/stream`（SSE，需 JWT）

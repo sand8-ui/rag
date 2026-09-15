@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: staywise-postgres
+    environment:
+      POSTGRES_USER: staywise
+      POSTGRES_PASSWORD: staywise
+      POSTGRES_DB: staywise
+    ports:
+      - '5432:5432'
+    volumes:
+      - staywise_pg:/var/lib/postgresql/data
+
+volumes:
+  staywise_pg:
