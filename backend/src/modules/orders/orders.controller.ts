@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -13,8 +12,9 @@ import {
   type AuthUser,
 } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { ZodBody } from '../../common/pipes/zod-validation.pipe';
+import { createOrderSchema, type CreateOrderDto } from './dto/create-order.dto';
+import { updateOrderSchema, type UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersService } from './orders.service';
 
 @UseGuards(JwtAuthGuard)
@@ -28,7 +28,10 @@ export class OrdersController {
   }
 
   @Post()
-  create(@CurrentUser() user: AuthUser, @Body() dto: CreateOrderDto) {
+  create(
+    @CurrentUser() user: AuthUser,
+    @ZodBody(createOrderSchema) dto: CreateOrderDto,
+  ) {
     return this.ordersService.create(user.userId, dto);
   }
 
@@ -36,7 +39,7 @@ export class OrdersController {
   update(
     @CurrentUser() user: AuthUser,
     @Param('id') id: string,
-    @Body() dto: UpdateOrderDto,
+    @ZodBody(updateOrderSchema) dto: UpdateOrderDto,
   ) {
     return this.ordersService.update(user.userId, id, dto);
   }

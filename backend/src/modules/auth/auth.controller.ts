@@ -1,8 +1,9 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Controller, HttpCode, Post } from '@nestjs/common';
+import { ZodBody } from '../../common/pipes/zod-validation.pipe';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RefreshDto } from './dto/refresh.dto';
-import { RegisterDto } from './dto/register.dto';
+import { loginSchema, type LoginDto } from './dto/login.dto';
+import { refreshSchema, type RefreshDto } from './dto/refresh.dto';
+import { registerSchema, type RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -10,24 +11,24 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  login(@Body() dto: LoginDto) {
+  login(@ZodBody(loginSchema) dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Post('register')
-  register(@Body() dto: RegisterDto) {
+  register(@ZodBody(registerSchema) dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('refresh')
   @HttpCode(200)
-  refresh(@Body() dto: RefreshDto) {
+  refresh(@ZodBody(refreshSchema) dto: RefreshDto) {
     return this.authService.refresh(dto);
   }
 
   @Post('logout')
   @HttpCode(200)
-  logout(@Body() dto: RefreshDto) {
+  logout(@ZodBody(refreshSchema) dto: RefreshDto) {
     return this.authService.logout(dto);
   }
 }
