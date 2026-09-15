@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.env
+*.db
+*.db-journal
+.DS_Store
+backend/node_modules
+frontend/node_modules
+backend/dist
+frontend/dist
+backend/coverage
+frontend/coverage
