@@ -1,60 +1,111 @@
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import type { User } from '../types';
-
-const TOKEN_KEY = 'hotel_token';
-const USER_KEY = 'hotel_user';
+import { logout as logoutRequest } from '../api/auth';
+import { requestTokenRefresh } from '../api/client';
+import {
+  clearSession,
+  getAccessToken,
+  getRefreshToken,
+  getStoredUser,
+  persistSession,
+  setOnUnauthorized,
+} from '../auth/tokens';
+import type { AuthResponse, User } from '../types';
 
 type AuthContextValue = {
-  token: string | null;
+  isReady: boolean;
+  isAuthenticated: boolean;
+  accessToken: string | null;
   user: User | null;
-  login: (token: string, user: User) => void;
-  logout: () => void;
+  login: (session: AuthResponse) => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readUser(): User | null {
-  const raw = localStorage.getItem(USER_KEY);
-  if (!raw) {
-    return null;
-  }
-  try {
-    return JSON.parse(raw) as User;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem(TOKEN_KEY),
-  );
-  const [user, setUser] = useState<User | null>(readUser);
+  const [isReady, setIsReady] = useState(false);
+  const [accessToken, setAccessTokenState] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+
+  const login = useCallback((session: AuthResponse) => {
+    persistSession(session);
+    setAccessTokenState(session.accessToken);
+    setUser(session.user);
+  }, []);
+
+  const logout = useCallback(async () => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await logoutRequest(refreshToken);
+      } catch {
+        // Local session still needs to be cleared.
+      }
+    }
+    clearSession();
+    setAccessTokenState(null);
+    setUser(null);
+  }, []);
+
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      setAccessTokenState(null);
+      setUser(null);
+    });
+    return () => setOnUnauthorized(null);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function bootstrap() {
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) {
+        clearSession();
+        if (!cancelled) {
+          setIsReady(true);
+        }
+        return;
+      }
+
+      const session = await requestTokenRefresh();
+      if (cancelled) {
+        return;
+      }
+      if (session?.accessToken) {
+        setAccessTokenState(getAccessToken());
+        setUser(session.user ?? getStoredUser());
+      } else {
+        setAccessTokenState(null);
+        setUser(null);
+      }
+      setIsReady(true);
+    }
+
+    void bootstrap();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      token,
+      isReady,
+      isAuthenticated: Boolean(accessToken),
+      accessToken,
       user,
-      login: (nextToken, nextUser) => {
-        localStorage.setItem(TOKEN_KEY, nextToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
-        setToken(nextToken);
-        setUser(nextUser);
-      },
-      logout: () => {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        setToken(null);
-        setUser(null);
-      },
+      login,
+      logout,
     }),
-    [token, user],
+    [accessToken, isReady, login, logout, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -62,8 +62,9 @@ export function AppLayout() {
           <Button
             icon={<LogoutOutlined />}
             onClick={() => {
-              logout();
-              navigate('/login');
+              void logout().finally(() => {
+                navigate('/login');
+              });
             }}
           >
             退出

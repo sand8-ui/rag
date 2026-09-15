@@ -36,9 +36,17 @@ export type Order = {
   status: OrderStatus;
 };
 
-export type AuthResponse = {
+export type TokenPair = {
   accessToken: string;
+  refreshToken: string;
+};
+
+export type AuthResponse = TokenPair & {
   user: User;
+};
+
+export type RefreshResponse = TokenPair & {
+  user?: User;
 };
 
 export type SearchQuery = {

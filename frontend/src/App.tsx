@@ -1,3 +1,4 @@
+import { Spin } from 'antd';
 import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';
@@ -9,9 +10,21 @@ import { OrdersPage } from './pages/Orders';
 import { SearchPage } from './pages/Search';
 import { useAuth } from './stores/auth';
 
+function AuthBootGate({ children }: { children: ReactNode }) {
+  const { isReady } = useAuth();
+  if (!isReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+  return children;
+}
+
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { token } = useAuth();
-  if (!token) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   return children;
@@ -19,22 +32,24 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/" element={<SearchPage />} />
-        <Route path="/hotels" element={<HotelListPage />} />
-        <Route path="/hotels/:id" element={<HotelDetailPage />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/chat" element={<ChatPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <AuthBootGate>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/" element={<SearchPage />} />
+          <Route path="/hotels" element={<HotelListPage />} />
+          <Route path="/hotels/:id" element={<HotelDetailPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthBootGate>
   );
 }
