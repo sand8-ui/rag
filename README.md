@@ -4,9 +4,9 @@ NestJS + React（Vite）单体仓库骨架。当前是框架阶段：页面可�
 
 ## 技术栈
 
-- 后端：NestJS、Prisma、PostgreSQL、JWT 双 token
+- 后端：NestJS、Prisma、PostgreSQL（pgvector）、JWT 双 token
 - 前端：React、Vite、TailwindCSS、Ant Design、React Router
-- AI 客服：SSE 流式占位，后续接 RAG 检索
+- AI 客服：SSE 占位；知识库原文在 `knowledge/`（md + docx），检索流程待接
 
 ## 本地启动
 
@@ -44,6 +44,7 @@ npm run dev:web   # http://localhost:5173
 ```
 backend/     NestJS API
 frontend/    Vite React 应用
+knowledge/   RAG 原始文档（尚未切片）
 ```
 
 ## 页面
