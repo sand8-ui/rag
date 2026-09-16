@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { HotelsModule } from './modules/hotels/hotels.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ChatModule } from './modules/chat/chat.module';
     HotelsModule,
     OrdersModule,
     ChatModule,
+    KnowledgeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -20,7 +20,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "knowledge:ingest": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' src/modules/knowledge/ingest.cli.ts",
+    "knowledge:eval": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' src/modules/knowledge/eval.cli.ts",
+    "knowledge:eval:ragas": "taskpolicy -b ../knowledge/.eval-venv/bin/python ../knowledge/eval/ragas_eval.py"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -34,6 +37,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/client": "^6.19.3",
     "bcrypt": "^6.0.0",
+    "mammoth": "^1.12.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",

@@ -67,3 +67,54 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+enum KnowledgeSourceType {
+  md
+  docx
+}
+
+enum ChunkStrategy {
+  heading
+  heading_split
+  parent_child
+}
+
+enum ChunkRole {
+  parent
+  child
+}
+
+model KnowledgeDocument {
+  id          String               @id @default(cuid())
+  sourcePath  String               @unique
+  sourceType  KnowledgeSourceType
+  title       String
+  contentHash String
+  ingestedAt  DateTime             @default(now())
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  chunks      KnowledgeChunk[]
+}
+
+model KnowledgeChunk {
+  id            String             @id @default(cuid())
+  documentId    String
+  document      KnowledgeDocument  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  strategy      ChunkStrategy
+  role          ChunkRole          @default(child)
+  parentChunkId String?
+  parent        KnowledgeChunk?    @relation("ChunkParent", fields: [parentChunkId], references: [id], onDelete: SetNull)
+  children      KnowledgeChunk[]   @relation("ChunkParent")
+  chunkIndex    Int
+  content       String
+  sectionTitle  String?
+  metadata      Json?
+  /// Native pgvector; Prisma Client 不暴露该字段，读写走 $queryRaw。
+  embedding     Unsupported("vector(1024)")?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([documentId, strategy, chunkIndex])
+  @@index([strategy])
+  @@index([documentId, strategy])
+}

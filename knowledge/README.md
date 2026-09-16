@@ -14,6 +14,18 @@ cd knowledge
 PYTHONPATH=.pylib python3 generate_docx.py
 ```
 
-## 下一步（尚未做）
+## 评测
 
-解析 → 切片 → embedding → 写入 PostgreSQL `pgvector` → 客服检索。
+```bash
+# heading 切块的 labeled 检索（Hit@10 / MRR）
+npm run knowledge:eval
+
+# RAGAS：Recall@3、幻觉率（1-Faithfulness）、回答准确率（AnswerCorrectness）
+# 需要本地 Ollama：bge-m3 + qwen2.5:7b（CHAT_MODEL）
+python3 -m venv knowledge/.eval-venv
+knowledge/.eval-venv/bin/pip install -r knowledge/eval/requirements.txt
+ollama pull qwen2.5:7b
+# 默认只用 bge-m3，不加载 7B 裁判（安静）。
+taskpolicy -b knowledge/.eval-venv/bin/python knowledge/eval/ragas_eval.py --strategy heading
+# 需要原版 RAGAS+7B 时再加：--judge ragas
+```

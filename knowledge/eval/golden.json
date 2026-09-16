@@ -1,0 +1,570 @@
+{
+  "description": "StayWise 检索黄金集。命中条件：sourcePath + sectionTitle 都与 KnowledgeChunk 一致。题目用客服原话，不照抄标题。k=10 用于 labeled 检索评测；RAGAS 另取 top-3。groundTruth 供 Faithfulness / AnswerCorrectness 使用。",
+  "k": 10,
+  "cases": [
+    {
+      "id": "cancel-default",
+      "query": "我明天入住，现在取消要扣钱吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "2. 限时免费取消（默认口径）"
+        }
+      ],
+      "groundTruth": "演示默认按「限时免费取消」。入住日前 1 个自然日 23:59 之前删除订单不收取房费。你明天入住，若现在仍早于入住日前一天 23:59（通常即今天 23:59 前），一般不扣房费；进入入住日后取消才按首晚 50%（18:00 前）或 100%（18:00 后/未到店）计。"
+    },
+    {
+      "id": "cancel-no-show-fee",
+      "query": "入住当天晚上才取消，会收多少钱？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "2. 限时免费取消（默认口径）"
+        }
+      ],
+      "groundTruth": "入住当天晚上取消按默认限时免费取消的 No-Show 档：入住日 18:00 之后取消，或未办理入住且未提前取消，收取首晚房费的 100%。连住也只按首晚计违约金。"
+    },
+    {
+      "id": "cancel-nonrefundable",
+      "query": "我买的是不可取消价格，住院了能不能退？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "3. 不可取消产品"
+        },
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "7. 特殊原因减免"
+        }
+      ],
+      "groundTruth": "不可取消产品支付成功后原则上不可退、不可改。因住院等特殊原因，可在入住日后 7 个自然日内提交二级甲等及以上医院、且开具日期覆盖原入住日的证明，经审核后退还扣除 10% 服务费后的余额，不保证全额。"
+    },
+    {
+      "id": "cancel-cooling-off",
+      "query": "刚下单十分钟，能马上退掉吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 A：下单后十分钟反悔"
+        },
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "4. 订后 30 分钟冷静期"
+        },
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "2. 限时免费取消（默认口径）"
+        }
+      ],
+      "groundTruth": "演示默认是限时免费取消，不是「订后 30 分钟冷静期」产品。刚下单约十分钟：只要仍在入住日前 1 个自然日 23:59 之前，删除订单即可免费取消。只有带「30 分钟免费取消」标签的产品才按下单后 30 分钟计时；超时 1 秒即不可取消。不要承诺一定全额秒退到银行卡。"
+    },
+    {
+      "id": "cancel-early-departure",
+      "query": "已经入住了想提前退房，后面几晚还能退吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "5. 提前离店与缩短行程"
+        }
+      ],
+      "groundTruth": "已办理入住后提前退房：当天 12:00 前提出并完成退房则当晚不计费，已住晚数照常结算；当天 12:00 后提出则当晚会照常计费。限时免费取消产品可退未住晚房费的 80%；不可取消产品不退未住晚。"
+    },
+    {
+      "id": "cancel-holiday",
+      "query": "国庆入住的订单，免费取消截止是哪天？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/01-cancellation-policy.md",
+          "sectionTitle": "6. 节假日与大型展会特殊日历"
+        }
+      ],
+      "groundTruth": "春节、劳动节、国庆及指定展会期间，默认取消规则整体提前 24 小时。例如国庆 10 月 1 日入住的限时免费取消，免费取消截止变为 9 月 29 日 23:59。具体以订单详情页取消条款为准。"
+    },
+    {
+      "id": "cio-checkin-time",
+      "query": "一般几点可以办理入住？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/02-check-in-out.md",
+          "sectionTitle": "1. 标准时间"
+        }
+      ],
+      "groundTruth": "标准入住时间为当日 15:00 以后。14:00–15:00 视空房尽量安排，不承诺；12:00–14:00 提前入住可能收取首晚 30% 或升级到已清洁房间；12:00 以前按补订前一晚处理，须有库存。与现场牌示冲突时以现场为准。"
+    },
+    {
+      "id": "cio-early-checkin-fee",
+      "query": "中午十二点到一点想提前入住，要加钱吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/02-check-in-out.md",
+          "sectionTitle": "1. 标准时间"
+        }
+      ],
+      "groundTruth": "中午 12:00 到 14:00 属提前入住，可能收取首晚 30% 的提前入住费，或升级到已清洁房间，不保证免费。12:00–15:00 之间 14:00 前按提前入住档，14:00–15:00 只是尽量安排、不承诺。12:00 以前到店按补订前一晚处理。"
+    },
+    {
+      "id": "cio-late-checkout",
+      "query": "超时退房怎么收费？下午六点以后呢？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/02-check-in-out.md",
+          "sectionTitle": "3. 超时退房（Late Check-out）"
+        }
+      ],
+      "groundTruth": "标准离店为当日 12:00 以前。12:00–14:00 多为免费或视房态；14:00–18:00 通常收取半晚房费；18:00 以后通常收取全晚房费。超时退房走客服工单或酒店前台，不能用订单「改期」代替，也不改变离店日期字段。"
+    },
+    {
+      "id": "cio-deposit",
+      "query": "前台押金大概要付多少？预授权多久能解冻？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/02-check-in-out.md",
+          "sectionTitle": "2. 办理入住需要带什么"
+        }
+      ],
+      "groundTruth": "前台押金或信用卡预授权额度一般为 500–2000 元/间，用于迷你吧、损坏、超时退房。离店查房后现金押金退还；信用卡预授权解除通常 1–15 个工作日，以发卡行为准。平台预付订单房费已付给 StayWise，前台一般只收押金。"
+    },
+    {
+      "id": "cio-double-charge",
+      "query": "App 里已经付过房费了，前台为什么还要再收一遍？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/02-check-in-out.md",
+          "sectionTitle": "2. 办理入住需要带什么"
+        },
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 E：前台要再收一遍房费"
+        }
+      ],
+      "groundTruth": "平台预付则房费已付给 StayWise，前台一般只收押金，不应再收一遍房费。请用户立即在 App 打开订单给前台核对「预付」标记，并联系在线客服。不要让用户先再付一遍再回头报销。"
+    },
+    {
+      "id": "cio-late-arrival",
+      "query": "高铁晚点晚上九点才到，房间还留着吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/02-check-in-out.md",
+          "sectionTitle": "4. 未到店（No-Show）"
+        },
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 B：入住当天中午还没出发"
+        }
+      ],
+      "groundTruth": "入住日 18:00 前仍未办理且未取消，酒店可将房间释放给当天 Walk-in，费用按 No-Show 档。高铁晚点约 21:00 到店：请在 18:00 前致电酒店或找 StayWise 做晚到担保并说明预计到达时间，否则不保证留房。不要保证「肯定留到半夜」。"
+    },
+    {
+      "id": "cio-capacity",
+      "query": "江景豪华大床房能住三个人吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/02-check-in-out.md",
+          "sectionTitle": "5. 加床、加人、访客"
+        },
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 D：人数超了"
+        }
+      ],
+      "groundTruth": "演示环境江景豪华大床房最多 2 人（含儿童），不能住三个大人。超过容量必须换更大房型（如行政套房最多 3 人）或加订一间；演示下单会校验失败。不要说「到了加床就行」。"
+    },
+    {
+      "id": "hotel-sh-metro",
+      "query": "上海外滩华尔道夫怎么坐地铁去？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/03-hotel-shanghai-waldorf.md",
+          "sectionTitle": "1. 位置与交通"
+        }
+      ],
+      "groundTruth": "上海外滩华尔道夫地址为黄浦区中山东一路 2 号。地铁建议 2 号线或 10 号线南京东路站，出站步行约 10–15 分钟；大件行李不推荐暴雨天步行。出租车导航「中山东一路 2 号」，延安东路隧道口高峰请预留约 20 分钟。"
+    },
+    {
+      "id": "hotel-sh-pearl",
+      "query": "江景房一定能看到东方明珠吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/03-hotel-shanghai-waldorf.md",
+          "sectionTitle": "4. 常见问答（本店）"
+        }
+      ],
+      "groundTruth": "部分江景房可以看到东方明珠，但不能在未确认房号前保证「正对东方明珠」。窗景也不能 100% 保证无遮挡。不要承诺一定能看到。"
+    },
+    {
+      "id": "hotel-hz-westlake",
+      "query": "杭州西溪悦榕庄离西湖近吗？出门就是湖滨吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/04-hotel-hangzhou-banyan.md",
+          "sectionTitle": "1. 产品定位"
+        },
+        {
+          "sourcePath": "markdown/04-hotel-hangzhou-banyan.md",
+          "sectionTitle": "2. 交通"
+        }
+      ],
+      "groundTruth": "杭州西溪悦榕庄是西溪湿地度假型物业，不是西湖边步行五分钟的城市酒店。距西湖核心景区车程通常 35–60 分钟，周末节假日更慢，出门不是湖滨银泰。演示没有西湖湖滨可订店，只能说明定位差异。"
+    },
+    {
+      "id": "hotel-hz-cook",
+      "query": "西溪别墅能自己煮火锅吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 K：西溪要自己做饭"
+        },
+        {
+          "sourcePath": "markdown/04-hotel-hangzhou-banyan.md",
+          "sectionTitle": "3. 房型"
+        }
+      ],
+      "groundTruth": "西溪湿地别墅不是全套厨房民宿，禁止明火、炭烤、火锅底料在室内外加热；烟雾报警与扰民清洁费由客人承担。家庭套房无厨房或仅有简单茶水台，电热水壶可以，热油锅不行。不要说别墅都可以自己做饭。"
+    },
+    {
+      "id": "points-redeem",
+      "query": "积分怎么抵房费？一千分能抵多少钱？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/07-membership-points.md",
+          "sectionTitle": "3. 积分用途（规划口径）"
+        }
+      ],
+      "groundTruth": "规划口径：1000 分抵 10 元房费，仅限 StayWise 预付订单，单笔最多抵应付金额的 20%；到店付、押金、迷你吧、早餐不能抵。演示环境不能真正扣分改价，也不能查积分余额。积分不可折现、原则上不可转赠。"
+    },
+    {
+      "id": "points-not-live",
+      "query": "我有一万积分，能不能直接改订单价格？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 I：积分抵房费"
+        },
+        {
+          "sourcePath": "markdown/07-membership-points.md",
+          "sectionTitle": "4. 客服禁语"
+        }
+      ],
+      "groundTruth": "演示积分账户未上线，不能在订单里抵扣或口头改价。规则可讲：1000 分抵 10 元、单笔最多 20%。不要说已经改好价格或已经加分。"
+    },
+    {
+      "id": "faq-breakfast",
+      "query": "房价含早餐吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/08-faq-general.md",
+          "sectionTitle": "价格"
+        },
+        {
+          "sourcePath": "docx/05-dining-and-minibar.docx",
+          "sectionTitle": "1. 早餐"
+        }
+      ],
+      "groundTruth": "演示标价默认不含早餐，是否含早必须以订单字段为准。若另购，上海约 180–280 元一份等均为约数，以下单或前台为准；早餐时段常见 6:30–10:00。"
+    },
+    {
+      "id": "faq-guest-password",
+      "query": "演示账号密码忘了怎么办？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/08-faq-general.md",
+          "sectionTitle": "预订与账号"
+        },
+        {
+          "sourcePath": "markdown/16-app-account-issues.md",
+          "sectionTitle": "1. 登录失败"
+        }
+      ],
+      "groundTruth": "演示环境暂无找回密码、也没有短信验证码。可重新注册新邮箱，或使用演示账号 guest@staywise.com / 123456。"
+    },
+    {
+      "id": "child-age",
+      "query": "十二岁小孩算成人还是儿童？占房型人数吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/09-children-extra-bed.md",
+          "sectionTitle": "1. 年龄定义"
+        }
+      ],
+      "groundTruth": "12 周岁及以上按成人计入房型人数；年龄以入住日当天证件为准。儿童为 3–11 周岁，儿童占用人数；婴儿 0–2 周岁不占用人数但每间最多 1 名且须成人同住。刚满 12 岁仍按成人，不要通融改系统校验。"
+    },
+    {
+      "id": "child-alone",
+      "query": "能让十二岁孩子单独开一间房吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 J：小孩单独住"
+        }
+      ],
+      "groundTruth": "12 岁按成人计人数，但未成年人单独开房多数酒店要求监护人陪同或书面授权。演示建议不要安排儿童单独一间，不要说「可以，身份证办就行」。"
+    },
+    {
+      "id": "a11y-shanghai",
+      "query": "上海外滩华尔道夫有无障碍房间吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/10-accessibility.md",
+          "sectionTitle": "1. 四家演示酒店概况"
+        },
+        {
+          "sourcePath": "markdown/03-hotel-shanghai-waldorf.md",
+          "sectionTitle": "4. 常见问答（本店）"
+        }
+      ],
+      "groundTruth": "上海外滩华尔道夫为历史保护建筑，无障碍友好度低，无障碍房间数量极少。需至少提前 48 小时让客服向酒店申请，不保证成功，StayWise 不能锁定房号。不要说五星级一定有无障碍房。"
+    },
+    {
+      "id": "overbooking",
+      "query": "到了酒店前台说满房，要把我转到别的店怎么办？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/14-overbooking-and-walk.md",
+          "sectionTitle": "1. 什么是超售（Overbooking）"
+        },
+        {
+          "sourcePath": "markdown/14-overbooking-and-walk.md",
+          "sectionTitle": "2. 处理顺序"
+        }
+      ],
+      "groundTruth": "请用户留在酒店大堂，不要先另订一间再付。核对订单号、酒店全称、入住人证件名与到达时间，确认 StayWise 仍有今天的有效订单，然后转人工联系酒店值班经理。目标顺序：原店同等或更高房型不补差 → 原店其它房型差价由酒店承担 → 同档 Walk，车费与差价由超售方承担。禁止说「今晚先凑合」。"
+    },
+    {
+      "id": "demo-pms",
+      "query": "演示环境的订单酒店前台看得到吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/14-overbooking-and-walk.md",
+          "sectionTitle": "5. 演示环境特别说明"
+        }
+      ],
+      "groundTruth": "StayWise 演示不会把订单推送到酒店 PMS。若用户真的去了酒店现场，前台不会有这条预订。应说明这是教学演示，不要编造「我已经通知前台了」。"
+    },
+    {
+      "id": "photo-mismatch",
+      "query": "房间和照片完全不一样，要全额退。",
+      "relevant": [
+        {
+          "sourcePath": "markdown/15-room-quality-complaints.md",
+          "sectionTitle": "3. 「和照片不一样」"
+        },
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 C：景观房争议"
+        }
+      ],
+      "groundTruth": "演示图来自图库，是房型示意，不是实时房号照片；家具摆放、楼层、窗外会不同。只有订单或详情页写了「保证江景 / 保证阳台」才按承诺处理。面积主观感受不是违约。不能证明完全无关景观时不要直接答应全额退。"
+    },
+    {
+      "id": "login-sms",
+      "query": "怎么收不到登录验证码？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/16-app-account-issues.md",
+          "sectionTitle": "1. 登录失败"
+        }
+      ],
+      "groundTruth": "演示没有验证码、没有找回密码、没有短信。收不到登录验证码是因为本环境不发短信。请用注册邮箱登录，演示账号为 guest@staywise.com / 123456。"
+    },
+    {
+      "id": "name-change",
+      "query": "能不能改入住人姓名？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/08-faq-general.md",
+          "sectionTitle": "订单操作"
+        },
+        {
+          "sourcePath": "markdown/17-third-party-and-name.md",
+          "sectionTitle": "5. 离婚、改名、证件更新"
+        }
+      ],
+      "groundTruth": "演示系统没有改姓名接口。尚未入住且规则允许时，删除旧单并用正确信息重订；不可取消或已过免费窗则转人工请酒店备注证件名，不保证成功。不要让用户涂改证件或改数据库。"
+    },
+    {
+      "id": "price-match",
+      "query": "官网比你们便宜，能帮我退差价吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/18-price-promo-and-match.md",
+          "sectionTitle": "2. 和其他 OTA、酒店官网比价"
+        }
+      ],
+      "groundTruth": "StayWise 没有自动跟价，演示不同步任何外部价格，不能承诺全网最低，也不能现场补差价。不同平台打包内容（早餐、取消、积分）可能不同。用户坚持价保可记录截图（须含日期与取消条款）转商务，不现场答应补差。"
+    },
+    {
+      "id": "wifi-password",
+      "query": "酒店 WiFi 密码在哪里看？连不上怎么办？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/21-facilities-hours-wifi.md",
+          "sectionTitle": "2. Wi‑Fi"
+        }
+      ],
+      "groundTruth": "四家演示酒店客房均有免费 Wi‑Fi，密码在房卡套或电视首页。连不上可开关飞行模式、忘记网络后重连，并避开可能冲突的加密工具；不承诺固定带宽。不要向聊天发送路由器密码，也不要替用户破解网络。一般不按无法入住全额退。"
+    },
+    {
+      "id": "chengdu-pool",
+      "query": "成都太古里博舍有游泳池吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/21-facilities-hours-wifi.md",
+          "sectionTitle": "1. 四家店设施（演示口径，非实时）"
+        }
+      ],
+      "groundTruth": "成都太古里博舍演示口径没有游泳池，不要承诺有泳池或无边泳池。健身中心约 6:30–22:00。设施时段非实时，与现场牌示冲突时以现场为准。"
+    },
+    {
+      "id": "docx-change-what",
+      "query": "改期能改房型吗？还是只能改日期？",
+      "relevant": [
+        {
+          "sourcePath": "docx/01-order-date-change.docx",
+          "sectionTitle": "1. 允许改什么"
+        }
+      ],
+      "groundTruth": "改期只允许改入住日期和离店日期，离店必须晚于入住，入住不得早于操作当天。不能改房型、酒店、人数、价格或入住人姓名；这些需求要删旧单再订或转人工。改期不重新计算房价。"
+    },
+    {
+      "id": "docx-change-yesterday",
+      "query": "改期改到昨天为什么报错？",
+      "relevant": [
+        {
+          "sourcePath": "docx/01-order-date-change.docx",
+          "sectionTitle": "4. 失败场景"
+        },
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 G：改期改到昨天"
+        }
+      ],
+      "groundTruth": "入住日期不能早于今天。改到昨天会被前端拦截，若走接口会返回 400。不要帮用户改数据库。请改成今天或之后的合法日期。"
+    },
+    {
+      "id": "docx-invoice-type",
+      "query": "预付订单能开酒店住宿专票吗？",
+      "relevant": [
+        {
+          "sourcePath": "docx/02-invoice-reimbursement.docx",
+          "sectionTitle": "1. 谁来开票"
+        },
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 H：发票要开住宿专票"
+        }
+      ],
+      "groundTruth": "StayWise 预付订单由平台开具代订住宿服务费或旅游服务费类发票，不是酒店住宿专票。企业若只要酒店住宿专票，需到店现付或与酒店协商，可能无法满足。不要承诺一定开出住宿增值税专票。"
+    },
+    {
+      "id": "docx-invoice-points",
+      "query": "积分抵扣的那部分能开进发票金额吗？",
+      "relevant": [
+        {
+          "sourcePath": "docx/02-invoice-reimbursement.docx",
+          "sectionTitle": "4. 积分与优惠"
+        }
+      ],
+      "groundTruth": "积分抵扣部分不开票。发票金额等于用户实付现金，不可开「含积分的全额房费票」。演示没有自动开票接口。"
+    },
+    {
+      "id": "docx-demo-pay",
+      "query": "演示下单会不会真的刷我的银行卡？",
+      "relevant": [
+        {
+          "sourcePath": "docx/03-payment-guarantee.docx",
+          "sectionTitle": "1. 当前演示"
+        }
+      ],
+      "groundTruth": "演示下单不经过支付网关，不会发生真实银行卡扣款。酒店前台仍可能收押金预授权，那是酒店行为，与 StayWise 演示支付无关。"
+    },
+    {
+      "id": "docx-pet-shanghai",
+      "query": "想带猫去上海外滩华尔道夫可以吗？猫很安静。",
+      "relevant": [
+        {
+          "sourcePath": "docx/04-pets-and-allergies.docx",
+          "sectionTitle": "1. 四家店宠物政策（演示口径）"
+        },
+        {
+          "sourcePath": "markdown/13-customer-scenarios.md",
+          "sectionTitle": "情景 F：想带猫去外滩店"
+        }
+      ],
+      "groundTruth": "上海外滩华尔道夫原则上不接受宠物（含猫），服务犬除外；擅自带入可能被拒住且不予退款。不要建议塞包混入。杭州西溪悦榕庄小型犬可能接受但须提前申请，猫视供应，不是外滩店口径。"
+    },
+    {
+      "id": "docx-minibar",
+      "query": "迷你吧怎么计费？客房送餐几点到几点？",
+      "relevant": [
+        {
+          "sourcePath": "docx/05-dining-and-minibar.docx",
+          "sectionTitle": "3. 迷你吧与客房送餐"
+        }
+      ],
+      "groundTruth": "迷你吧按酒水单计费，从押金扣除；争议看小条与冰箱记录。客房送餐通常 6:00–23:00，另加服务费约 10–15%。禁止外带火锅烧烤进房加热。"
+    },
+    {
+      "id": "docx-lost-item",
+      "query": "退房后发现充电器落房间了，还能找回来吗？",
+      "relevant": [
+        {
+          "sourcePath": "docx/08-housekeeping-lost-found.docx",
+          "sectionTitle": "3. 遗失物品"
+        }
+      ],
+      "groundTruth": "离店后报失请提供房号或订单号、物品特征和大概位置。酒店保管期常见 30–90 天，寄回运费到付；液体、食品、低值牙刷类通常不寄。StayWise 不能强制酒店承认一定找到。"
+    },
+    {
+      "id": "docx-parking-bund",
+      "query": "外滩华尔道夫过夜停车大概多少钱？",
+      "relevant": [
+        {
+          "sourcePath": "docx/09-airport-transfer-parking.docx",
+          "sectionTitle": "2. 停车"
+        }
+      ],
+      "groundTruth": "外滩华尔道夫以代客泊车为主，过夜停车费约 150–200 元量级，以现场为准，车位紧张。不要说停车免费。新能源充电桩不保证有空位。"
+    },
+    {
+      "id": "docx-fraud",
+      "query": "有人打电话说订单异常让我转账补差价，是真的吗？",
+      "relevant": [
+        {
+          "sourcePath": "docx/11-fraud-and-phishing.docx",
+          "sectionTitle": "1. 真假辨别"
+        },
+        {
+          "sourcePath": "docx/11-fraud-and-phishing.docx",
+          "sectionTitle": "2. 常见剧本"
+        }
+      ],
+      "groundTruth": "这是诈骗。StayWise 不会要求把房费转到个人微信、支付宝或加密货币，也不会要密码、短信验证码或 CVV。「订单异常请转账补差价」「重复扣款先转 1 元验证」都是常见剧本。不要转账；已转账立即联系银行，平台不垫付。"
+    },
+    {
+      "id": "docx-visa",
+      "query": "能不能开带公章的酒店确认函办签证？",
+      "relevant": [
+        {
+          "sourcePath": "docx/12-visa-confirmation.docx",
+          "sectionTitle": "1. 演示能给什么"
+        }
+      ],
+      "groundTruth": "用户可自行截图「我的订单」，但这不是酒店盖章确认函，使馆不一定收。StayWise 演示不能生成带公章 PDF，不能出具邀请函，不能担保入境。"
+    },
+    {
+      "id": "emergency-injury",
+      "query": "客人在酒店滑倒受伤了，AI 能答应赔医疗费吗？",
+      "relevant": [
+        {
+          "sourcePath": "markdown/20-emergency-escalation.md",
+          "sectionTitle": "1. 立即报警或急救（AI 只给动作，不聊天安慰太久）"
+        },
+        {
+          "sourcePath": "docx/06-safety-and-valuables.docx",
+          "sectionTitle": "3. 意外"
+        }
+      ],
+      "groundTruth": "先保障人身安全：严重外伤打 120 并告知前台急救通道，同时报酒店安保，再开 StayWise 工单。AI 不能承诺平台赔偿医疗费金额，用户索要医疗赔偿必须转人工法务。不要说问题不大或先填问卷。"
+    }
+  ]
+}

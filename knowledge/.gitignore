@@ -1,1 +1,4 @@
 .pylib/
+.eval-venv/
+eval/last-report.json
+eval/last-ragas*.json
