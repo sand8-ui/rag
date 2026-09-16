@@ -1,15 +1,11 @@
-import { Button, DatePicker, Modal, Table, Tag, message } from 'antd';
+import { Button, DatePicker, Modal, Table, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { useEffect, useState } from 'react';
-import { cancelOrder, fetchOrders, updateOrder } from '../api/orders';
+import { getApiErrorMessage } from '../api/auth';
+import { deleteOrder, fetchOrders, updateOrder } from '../api/orders';
 import type { Order } from '../types';
-
-const STATUS_LABEL: Record<Order['status'], { color: string; text: string }> = {
-  PENDING: { color: 'blue', text: '待确认' },
-  CONFIRMED: { color: 'green', text: '已确认' },
-  CANCELLED: { color: 'default', text: '已取消' },
-};
+import { disablePastDate } from '../utils/booking-dates';
 
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -33,18 +29,35 @@ export function OrdersPage() {
     void loadOrders();
   }, []);
 
-  async function onCancel(order: Order) {
-    try {
-      await cancelOrder(order.id);
-      message.success('订单已取消');
-      await loadOrders();
-    } catch {
-      message.error('取消失败');
-    }
+  function onDelete(order: Order) {
+    Modal.confirm({
+      title: '删除订单',
+      content: `确定删除「${order.hotelName}」的预订吗？删除后不可恢复。`,
+      okText: '删除',
+      okType: 'danger',
+      cancelText: '返回',
+      onOk: async () => {
+        try {
+          await deleteOrder(order.id);
+          message.success('订单已删除');
+          await loadOrders();
+        } catch (error) {
+          message.error(getApiErrorMessage(error, '删除失败'));
+        }
+      },
+    });
   }
 
   async function onSaveDates() {
     if (!editing || !dates) {
+      return;
+    }
+    if (dates[0].isBefore(dayjs(), 'day')) {
+      message.warning('入住日期不能早于今天');
+      return;
+    }
+    if (!dates[1].isAfter(dates[0], 'day')) {
+      message.warning('离店日期必须晚于入住日期');
       return;
     }
     try {
@@ -55,22 +68,25 @@ export function OrdersPage() {
       message.success('入住时间已更新');
       setEditing(null);
       await loadOrders();
-    } catch {
-      message.error('改期失败');
+    } catch (error) {
+      message.error(getApiErrorMessage(error, '改期失败'));
     }
   }
 
   const columns: ColumnsType<Order> = [
     { title: '酒店', dataIndex: 'hotelName' },
     { title: '房型', dataIndex: 'roomName' },
+    {
+      title: '人数',
+      dataIndex: 'guests',
+      render: (value?: number) => value ?? '-',
+    },
     { title: '入住', dataIndex: 'checkIn' },
     { title: '离店', dataIndex: 'checkOut' },
     {
-      title: '状态',
-      dataIndex: 'status',
-      render: (status: Order['status']) => (
-        <Tag color={STATUS_LABEL[status].color}>{STATUS_LABEL[status].text}</Tag>
-      ),
+      title: '价格',
+      dataIndex: 'price',
+      render: (price: number) => `￥${price} / 晚`,
     },
     {
       title: '操作',
@@ -78,18 +94,15 @@ export function OrdersPage() {
         <div className="flex gap-2">
           <Button
             size="small"
-            disabled={order.status === 'CANCELLED'}
-            onClick={() => setEditing(order)}
+            onClick={() => {
+              setEditing(order);
+              setDates([dayjs(order.checkIn), dayjs(order.checkOut)]);
+            }}
           >
             改期
           </Button>
-          <Button
-            size="small"
-            danger
-            disabled={order.status === 'CANCELLED'}
-            onClick={() => onCancel(order)}
-          >
-            取消
+          <Button size="small" danger onClick={() => onDelete(order)}>
+            删除
           </Button>
         </div>
       ),
@@ -116,6 +129,7 @@ export function OrdersPage() {
         <DatePicker.RangePicker
           className="w-full"
           value={dates}
+          disabledDate={disablePastDate}
           onChange={(value) => setDates(value as [Dayjs, Dayjs] | null)}
         />
       </Modal>

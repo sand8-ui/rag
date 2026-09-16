@@ -9,6 +9,7 @@ export function createOrder(payload: {
   roomId: string;
   checkIn: string;
   checkOut: string;
+  guests?: number;
 }) {
   return api.post<Order>('/orders', payload);
 }
@@ -20,6 +21,6 @@ export function updateOrder(
   return api.patch<Order>(`/orders/${id}`, payload);
 }
 
-export function cancelOrder(id: string) {
-  return api.delete<Order>(`/orders/${id}`);
+export function deleteOrder(id: string) {
+  return api.delete<{ ok: boolean }>(`/orders/${id}`);
 }

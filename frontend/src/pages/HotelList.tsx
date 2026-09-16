@@ -58,7 +58,11 @@ export function HotelListPage() {
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
           {hotels.map((hotel) => (
-            <Link key={hotel.id} to={`/hotels/${hotel.id}`} className="block">
+            <Link
+              key={hotel.id}
+              to={`/hotels/${hotel.id}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
+              className="block"
+            >
               <Card
                 hoverable
                 cover={

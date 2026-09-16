@@ -9,6 +9,7 @@ export const createOrderSchema = z
     roomId: z.string().min(1, 'roomId 不能为空'),
     checkIn: dateString,
     checkOut: dateString,
+    guests: z.number().int().min(1, '人数至少 1 人').optional(),
   })
   .strict();
 

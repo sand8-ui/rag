@@ -2,6 +2,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import { Button, Card, DatePicker, Form, InputNumber, Select } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { useNavigate } from 'react-router-dom';
+import { disablePastDate } from '../utils/booking-dates';
 
 type SearchForm = {
   city: string;
@@ -58,7 +59,7 @@ export function SearchPage() {
             label="入住 / 离店"
             rules={[{ required: true, message: '请选择日期' }]}
           >
-            <DatePicker.RangePicker />
+            <DatePicker.RangePicker disabledDate={disablePastDate} />
           </Form.Item>
           <Form.Item
             name="guests"

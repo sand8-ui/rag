@@ -50,24 +50,20 @@ model Room {
   capacity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  orders    Order[]
 }
 
 model Order {
-  id        String      @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotelId   String
+  hotelName String
   roomId    String
-  room      Room        @relation(fields: [roomId], references: [id])
+  roomName  String
+  price     Float
+  guests    Int?
   checkIn   DateTime
   checkOut  DateTime
-  status    OrderStatus @default(PENDING)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

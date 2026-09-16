@@ -22,8 +22,6 @@ export type Hotel = {
   rooms: HotelRoom[];
 };
 
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-
 export type Order = {
   id: string;
   userId: string;
@@ -31,9 +29,10 @@ export type Order = {
   hotelName: string;
   roomId: string;
   roomName: string;
+  price: number;
+  guests?: number;
   checkIn: string;
   checkOut: string;
-  status: OrderStatus;
 };
 
 export type TokenPair = {
