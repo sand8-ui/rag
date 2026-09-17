@@ -16,6 +16,7 @@ model User {
   updatedAt     DateTime       @updatedAt
   orders        Order[]
   refreshTokens RefreshToken[]
+  conversations Conversation[]
 }
 
 model RefreshToken {
@@ -66,6 +67,37 @@ model Order {
   checkOut  DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum ChatMessageRole {
+  user
+  assistant
+}
+
+model Conversation {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String        @default("新对话")
+  slots     Json?
+  summary   String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model ChatMessage {
+  id             String          @id @default(cuid())
+  conversationId String
+  conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           ChatMessageRole
+  content        String
+  citations      Json?
+  createdAt      DateTime        @default(now())
+
+  @@index([conversationId, createdAt])
 }
 
 enum KnowledgeSourceType {

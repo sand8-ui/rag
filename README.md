@@ -6,7 +6,7 @@ NestJS + React（Vite）单体仓库骨架。当前是框架阶段：页面可�
 
 - 后端：NestJS、Prisma、PostgreSQL（pgvector）、JWT 双 token
 - 前端：React、Vite、TailwindCSS、Ant Design、React Router
-- AI 客服：SSE 占位；知识库原文在 `knowledge/`（md + docx），检索流程待接
+- AI 客服：`POST /chat/stream` SSE 对接本地 Chat 模型；按用户问题做知识库检索后回答，会话落库
 
 ## 本地启动
 
@@ -56,11 +56,12 @@ knowledge/   RAG 原始文档（尚未切片）
 | `/hotels` | 酒店列表 |
 | `/hotels/:id` | 酒店详情与预订 |
 | `/orders` | 订单：取消 / 改期 |
-| `/chat` | AI 客服（SSE 占位） |
+| `/chat` | AI 客服（SSE 流式对话） |
 
 ## 主要接口
 
 - `POST /auth/login`、`POST /auth/register`、`POST /auth/refresh`、`POST /auth/logout`
 - `GET /hotels`、`GET /hotels/:id`（需 JWT）
 - `GET /orders`、`POST /orders`、`PATCH /orders/:id`、`DELETE /orders/:id`（需 JWT）
-- `GET /chat/stream`（SSE，需 JWT）
+- `GET /chat/conversations`、`GET /chat/conversations/:id`、`DELETE /chat/conversations/:id`（需 JWT）
+- `POST /chat/stream`（SSE，需 JWT；body `{ conversationId?, content }`；按最新问题检索知识库）

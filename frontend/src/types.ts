@@ -54,3 +54,33 @@ export type SearchQuery = {
   checkOut?: string;
   guests?: string;
 };
+
+export type ChatCitation = {
+  chunkId: string;
+  sourcePath: string;
+  documentTitle: string;
+  sectionTitle: string | null;
+  score: number;
+};
+
+export type ConversationSummary = {
+  id: string;
+  title: string;
+  updatedAt: string;
+};
+
+export type ChatMessageRecord = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  citations?: ChatCitation[];
+  createdAt: string;
+};
+
+export type ConversationDetail = {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessageRecord[];
+};

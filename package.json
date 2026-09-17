@@ -4,13 +4,14 @@
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"npm run start:dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "dev:api": "npm run start:dev --prefix backend",
-    "dev:web": "npm run dev --prefix frontend",
-    "prisma:generate": "npm run prisma:generate --prefix backend",
-    "prisma:push": "npm run prisma:push --prefix backend",
-    "prisma:seed": "npm run prisma:seed --prefix backend",
-    "knowledge:ingest": "npm run knowledge:ingest --prefix backend",
-    "knowledge:eval": "npm run knowledge:eval --prefix backend",
-    "knowledge:eval:ragas": "taskpolicy -b knowledge/.eval-venv/bin/python knowledge/eval/ragas_eval.py"
+    "dev:web": "npm run dev --prefix frontend", //step 1:start docker step2: start frontend && backend
+    "prisma:studio": "npm run prisma:studio --prefix backend", 
+    "prisma:push": "npm run prisma:push --prefix backend", // step 3: Push changes to database
+    "prisma:generate": "npm run prisma:generate --prefix backend", 
+    "knowledge:ingest": "npm run knowledge:ingest --prefix backend", 
+    "knowledge:eval": "npm run knowledge:eval --prefix backend", 
+    "knowledge:eval:ragas": "taskpolicy -b knowledge/.eval-venv/bin/python knowledge/eval/ragas_eval.py", // Evaluate knowledge with ragas
+    "npx prisma studio": "start prisma studio" // step 4: Run prisma studio
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
