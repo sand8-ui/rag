@@ -7,13 +7,12 @@ import {
 } from '../knowledge/retriever.service';
 import {
   CHAT_RETRIEVE_K,
-  buildPinnedSystem,
-  buildRagTurns,
   toCitations,
   trimRetrieved,
   type ChatCitation,
   type LlmMessage,
 } from './chat-context';
+import { packChatContext } from './chat-pack';
 import {
   REFUSE_REPLY,
   buildRouterMessages,
@@ -21,12 +20,7 @@ import {
 } from './chat-router';
 import { ChatLlmService } from './chat-llm.service';
 import { asSlots, collectSlots } from './chat-slots';
-import {
-  CHAT_CONTEXT_BUDGET,
-  estimateMessage,
-  estimateMessages,
-} from './chat-tokens';
-import { buildSummaryPrompt, slideWindow } from './chat-window';
+import { buildSummaryPrompt } from './chat-window';
 import { ConversationService } from './conversation.service';
 import type { StreamChatDto } from './dto/stream-chat.dto';
 
@@ -143,14 +137,26 @@ export class ChatService {
         citations,
       });
 
-      const messages = await this.buildModelMessages({
+      const packed = await packChatContext({
         history,
+        retrieved,
         slots,
         summary: conversation.summary,
-        retrieved,
-        conversationId: conversation.id,
-        signal: abort.signal,
+        mode: 'full',
+        summarize: async (previous, overflow) => {
+          const summary = await this.summarizeOverflow(
+            previous,
+            overflow,
+            abort.signal,
+          );
+          await this.conversations.updateMemory(conversation.id, { summary });
+          return summary;
+        },
       });
+      this.logger.log(
+        `context tokens≈${packed.tokens} kept=${packed.kept} overflow=${packed.overflow}`,
+      );
+      const messages = packed.messages;
 
       let assistant = '';
       for await (const token of this.chatLlmService.streamTokens(
@@ -187,48 +193,6 @@ export class ChatService {
       req.off('close', onClose);
       res.end();
     }
-  }
-
-  private async buildModelMessages(options: {
-    history: LlmMessage[];
-    slots: ReturnType<typeof asSlots>;
-    summary: string | null;
-    retrieved: Awaited<ReturnType<ChatService['retrieveKnowledge']>>;
-    conversationId: string;
-    signal: AbortSignal;
-  }): Promise<LlmMessage[]> {
-    const ragTurns = buildRagTurns(options.retrieved);
-    let summary = options.summary;
-    let pinned = buildPinnedSystem(options.slots, summary);
-    let historyBudget = this.historyBudget(pinned, ragTurns, options.history);
-    let { kept, overflow } = slideWindow(options.history, historyBudget);
-
-    if (overflow.length > 0) {
-      summary = await this.summarizeOverflow(summary, overflow, options.signal);
-      await this.conversations.updateMemory(options.conversationId, { summary });
-      pinned = buildPinnedSystem(options.slots, summary);
-      historyBudget = this.historyBudget(pinned, ragTurns, options.history);
-      ({ kept, overflow } = slideWindow(options.history, historyBudget));
-    }
-
-    this.logger.log(
-      `context tokens≈${estimateMessages([{ role: 'system', content: pinned }, ...ragTurns, ...kept])} kept=${kept.length} overflow=${overflow.length}`,
-    );
-    return [{ role: 'system', content: pinned }, ...ragTurns, ...kept];
-  }
-
-  private historyBudget(
-    pinned: string,
-    ragTurns: LlmMessage[],
-    history: LlmMessage[],
-  ) {
-    const reserved = estimateMessages([
-      { role: 'system', content: pinned },
-      ...ragTurns,
-    ]);
-    const current = history[history.length - 1];
-    const minHistory = current ? estimateMessage(current) : 0;
-    return Math.max(CHAT_CONTEXT_BUDGET - reserved, minHistory);
   }
 
   private async summarizeOverflow(

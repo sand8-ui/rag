@@ -23,6 +23,7 @@
     "prisma:seed": "prisma db seed",
     "knowledge:ingest": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' src/modules/knowledge/ingest.cli.ts",
     "knowledge:eval": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' src/modules/knowledge/eval.cli.ts",
+    "chat:eval:context": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' src/modules/chat/context-eval.cli.ts",
     "knowledge:eval:ragas": "taskpolicy -b ../knowledge/.eval-venv/bin/python ../knowledge/eval/ragas_eval.py",
     "npx prisma studio": "start prisma studio"
   },

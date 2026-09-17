@@ -1,0 +1,59 @@
+{
+  "description": "多轮 context 对比：同一检索、同一探针问题，比较纯滑动窗口 vs 窗口+槽位+溢出摘要。评测用较小 token 预算，才能把首轮事实滑出窗口。",
+  "budget": 1500,
+  "ragTokenBudget": 700,
+  "fillers": 6,
+  "scripts": [
+    {
+      "id": "order-cancel",
+      "setup": [
+        {
+          "role": "user",
+          "content": "我的订单号是 cctxeval00000000000001，订的上海外滩华尔道夫酒店，入住 2026-10-03，离店 2026-10-05。"
+        },
+        {
+          "role": "assistant",
+          "content": "已记下订单 cctxeval00000000000001，酒店为上海外滩华尔道夫酒店，入住 2026-10-03。"
+        }
+      ],
+      "probe": "那单现在取消要扣钱吗？",
+      "mustContain": ["cctxeval00000000000001"],
+      "shouldContainAny": ["取消", "华尔道夫", "23:59", "免费", "入住日"],
+      "mustNotMatch": ["请提供订单号", "需要订单号才能", "告诉我订单号"]
+    },
+    {
+      "id": "hotel-pet",
+      "setup": [
+        {
+          "role": "user",
+          "content": "我订的是杭州西溪悦榕庄，入住 2026-11-12，想确认一下这家店的规定。"
+        },
+        {
+          "role": "assistant",
+          "content": "已记下酒店杭州西溪悦榕庄，入住 2026-11-12。请继续问具体政策。"
+        }
+      ],
+      "probe": "那家酒店可以带宠物吗？",
+      "mustContain": ["悦榕庄"],
+      "shouldContainAny": ["宠物", "犬", "猫", "不可", "可以"],
+      "mustNotMatch": ["哪家酒店", "请提供酒店"]
+    },
+    {
+      "id": "deposit-followup",
+      "setup": [
+        {
+          "role": "user",
+          "content": "我明天入住上海外滩华尔道夫酒店，订单号 cctxeval00000000000002，先问一下超时退房怎么收费。"
+        },
+        {
+          "role": "assistant",
+          "content": "超时退房一般按入住须知：14:00 至 18:00 可能收半晚，18:00 后可能收全晚，以门店政策为准。"
+        }
+      ],
+      "probe": "押金呢？那个也退吗？",
+      "mustContain": ["押金"],
+      "shouldContainAny": ["退", "离店", "500", "2000", "华尔道夫"],
+      "mustNotMatch": ["你想问什么押金"]
+    }
+  ]
+}
