@@ -18,6 +18,8 @@ import {
   buildRouterMessages,
   parseChatRoute,
 } from './chat-router';
+import { INTENT_LABELS } from './chat-intent';
+import { ChatIntentService } from './chat-intent.service';
 import { ChatLlmService } from './chat-llm.service';
 import { asSlots, collectSlots } from './chat-slots';
 import { buildSummaryPrompt } from './chat-window';
@@ -38,6 +40,7 @@ export class ChatService {
 
   constructor(
     private readonly chatLlmService: ChatLlmService,
+    private readonly intents: ChatIntentService,
     private readonly conversations: ConversationService,
     private readonly retriever: RetrieverService,
   ) {}
@@ -128,7 +131,21 @@ export class ChatService {
         return;
       }
 
-      const retrieved = trimRetrieved(await this.retrieveKnowledge(dto.content));
+      const intent = await this.intents.recognize({
+        history,
+        slots,
+        signal: abort.signal,
+      });
+      if (intent.intent) {
+        slots.topic = INTENT_LABELS[intent.intent];
+        await this.conversations.updateMemory(conversation.id, { slots });
+      }
+      const query = this.intents.retrieveQuery(dto.content, intent, slots);
+      this.logger.log(
+        `chat intent=${intent.intent ?? 'none'} source=${intent.source} rewrite=${this.intents.shouldRewrite()} query=${query}`,
+      );
+
+      const retrieved = trimRetrieved(await this.retrieveKnowledge(query));
       const citations = retrieved ? toCitations(retrieved) : [];
       write({
         token: '',
